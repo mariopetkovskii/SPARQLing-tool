@@ -1,0 +1,75 @@
+<div class="container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="btn-group pt-2" role="group">
+        <input type="text" class="form-control" placeholder="Enter Ontology" #ontologyInput>
+        <div class="input-group-append">
+          <button class="btn btn-outline-secondary" type="button" (click)="getOntology(ontologyInput.value)">Get
+            Ontology
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="btn-group pt-2" role="group">
+        <button type="button" class="btn btn-secondary" [class.active]="showProperty" (click)="showPropertyTable()">
+          Property
+        </button>
+        <button type="button" class="btn btn-secondary" [class.active]="showIsPropertyOf"
+                (click)="showIsPropertyOfTable()">Is Property Of
+        </button>
+      </div>
+    </div>
+    <div class="col-md-6"></div>
+  </div>
+  <div *ngIf="loading" class="pt-lg-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="sr-only"></span>
+    </div>
+  </div>
+  <div *ngIf="!loading">
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div *ngIf="showProperty" style="max-height: 400px; overflow-y: scroll;">
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th>Property</th>
+              <th>Check</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let item of property">
+              <td>{{item.description}}</td>
+              <td><input type="checkbox" (change)="onCheckChange($event, item)"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <div *ngIf="showIsPropertyOf" style="max-height: 400px; overflow-y: scroll;">
+          <table class="table table-striped">
+            <thead>
+            <tr>
+              <th>Is Property Of</th>
+              <th>Check</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let item of isPropertyOf">
+              <td>{{item.description}}</td>
+              <td><input type="checkbox" (change)="onCheckChange($event, item)"></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div *ngIf="generatedQuery" class="mt-4">
+          <label for="queryResult">SPARQL Query:</label>
+          <textarea class="form-control" id="queryResult" rows="5" readonly>{{generatedQuery}}</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="btn btn-primary mt-4" (click)="generateSparql()">Generate</button>
+</div>
