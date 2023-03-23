@@ -7,4 +7,7 @@ public interface OntologyPrefixesConstants {
     String dboPrefix = "PREFIX dbo: <http://dbpedia.org/ontology/>";
     String dbrPrefix = "PREFIX dbr: <http://dbpedia.org/resource/>";
     String dbpPrefix = "PREFIX dbr: <http://dbpedia.org/property/>";
+    String owlPrefix = "PREFIX owl: <http://www.w3.org/2002/07/owl#>";
+    String xsdPrefix = "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>";
+    String foafPrefix = "PREFIX foaf: <http://xmlns.com/foaf/0.1/>";
 }

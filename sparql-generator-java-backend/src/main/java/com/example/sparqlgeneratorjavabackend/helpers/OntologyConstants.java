@@ -10,6 +10,9 @@ public class OntologyConstants {
     private static final String dboPrefix = "http://dbpedia.org/ontology/";
     private static final String dbrPrefix = "http://dbpedia.org/resource/";
     private static final String dbpPrefix = "http://dbpedia.org/property/";
+    private static final String owlPrefix = "http://www.w3.org/2002/07/owl#";
+    private static final String xsdPrefix = "http://www.w3.org/2001/XMLSchema#";
+    private static final String foafPrefix = "http://xmlns.com/foaf/0.1/";
     public static Map<String, String> constants = new HashMap<>();
 
     static {
@@ -19,5 +22,8 @@ public class OntologyConstants {
         constants.put("dbo", dboPrefix);
         constants.put("dbr", dbrPrefix);
         constants.put("dbp", dbpPrefix);
+        constants.put("foaf", foafPrefix);
+        constants.put("xsd", xsdPrefix);
+        constants.put("owl", owlPrefix);
     }
 }

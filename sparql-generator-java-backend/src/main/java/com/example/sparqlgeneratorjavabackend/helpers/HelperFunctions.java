@@ -32,6 +32,9 @@ public class HelperFunctions {
             case "dbo" -> OntologyPrefixesConstants.dboPrefix;
             case "dbr" -> OntologyPrefixesConstants.dbrPrefix;
             case "dbp" -> OntologyPrefixesConstants.dbpPrefix;
+            case "foaf" -> OntologyPrefixesConstants.foafPrefix;
+            case "xsd" -> OntologyPrefixesConstants.xsdPrefix;
+            case "owl" -> OntologyPrefixesConstants.owlPrefix;
             default -> "";
         };
     }
