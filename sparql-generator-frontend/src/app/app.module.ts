@@ -5,19 +5,26 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HomepageComponent } from './homepage/homepage.component';
 import {HttpClientModule} from "@angular/common/http";
-import {FormsModule} from "@angular/forms";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import { DialogConstraintsComponent } from './dialog-constraints/dialog-constraints.component';
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatTableModule} from "@angular/material/table";
 
 @NgModule({
   declarations: [
     AppComponent,
-    HomepageComponent
+    HomepageComponent,
+    DialogConstraintsComponent
   ],
-    imports: [
-        BrowserModule,
-        AppRoutingModule,
-        HttpClientModule,
-        FormsModule
-    ],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    HttpClientModule,
+    FormsModule,
+    MatDialogModule,
+    ReactiveFormsModule,
+    MatTableModule
+  ],
   providers: [],
   bootstrap: [AppComponent]
 })

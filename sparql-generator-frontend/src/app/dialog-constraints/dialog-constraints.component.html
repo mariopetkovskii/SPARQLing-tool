@@ -1,0 +1,28 @@
+<form [formGroup]="itemsForm" class="commentForm">
+  <div class="row">
+    <div class="col-15">
+      Test
+    </div>
+    <div class="col-80">
+      <input type="text" formControlName="comment" />
+    </div>
+  </div>
+
+  <div mat-dialog-actions>
+    <button
+      type="submit"
+      mat-raised-button
+      color="primary"
+      (click)="randomClick()"
+    >
+      {{dataResource}}
+    </button>
+    <button
+      mat-button
+      class="mat-focus-indicator mat-raised-button mat-button-base mat-raised"
+      (click)="cancelClick()"
+    >
+      Cancel
+    </button>
+  </div>
+</form>

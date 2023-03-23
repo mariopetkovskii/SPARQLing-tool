@@ -13,6 +13,14 @@ export class ApiService {
   }
 
   generateSparql(json: any){
-    return this.httpClient.post('http://localhost:8080/my-endpoint', json)
+    return this.httpClient.post('http://localhost:8080/generateSparql', json)
+  }
+
+  generateSparqlWithLabels(json: any){
+    return this.httpClient.post('http://localhost:8080/generateSparqlWithLabels', json)
+  }
+
+  executeSparql(json: any){
+    return this.httpClient.post('http://localhost:8080/executeSparql', json)
   }
 }
