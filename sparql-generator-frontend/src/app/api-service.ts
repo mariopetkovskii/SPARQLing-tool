@@ -12,8 +12,16 @@ export class ApiService {
     return this.httpClient.get('http://localhost:5000/get-ontology?resource=' + string)
   }
 
+  getOntologyWithPage(string: string){
+    return this.httpClient.get('http://localhost:5000/get-page-ontology?resource=' + string)
+  }
+
   generateSparql(json: any){
     return this.httpClient.post('http://localhost:8080/generateSparql', json)
+  }
+
+  generateDynamicSparql(json: any){
+    return this.httpClient.post('http://localhost:8080/generateDynamicSparql', json)
   }
 
   generateSparqlWithLabels(json: any){

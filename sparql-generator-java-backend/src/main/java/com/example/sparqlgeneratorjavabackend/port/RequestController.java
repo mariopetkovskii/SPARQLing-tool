@@ -34,4 +34,12 @@ public class RequestController {
         return ResponseEntity.ok(HelperFunctions.executeQuery(query, props));
     }
 
+    @PostMapping("/generateDynamicSparql")
+    public ResponseEntity<Map<String, String>> generateDynamicSparql(@RequestBody Map<String, Object> payload){
+        String dataResource = (String) payload.get("dataResource");
+        List<Map<String, String>> props = (List<Map<String, String>>) payload.get("props");
+        String query = (String) payload.get("query");
+        return HelperFunctions.generateDynamicSparqlWithProperty(query, dataResource, props);
+    }
+
 }

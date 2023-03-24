@@ -61,6 +61,13 @@ def get_ontology():  # put application's code here
 
   return jsonify(uri_list)
 
+@app.route('/get-page-ontology')
+def get_ontology_with_url():
+  url = request.args.get('resource')
+  url.replace("/resource", "/page")
+  uri_list = get_url_ontology(url)
+
+  return jsonify(uri_list)
 
 if __name__ == '__main__':
     app.run()

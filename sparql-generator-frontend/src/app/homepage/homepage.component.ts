@@ -19,11 +19,11 @@ export class HomepageComponent {
   showProperty = false;
   showIsPropertyOf = false;
   checkedItems: any[] = [];
+  checkedItemsForQuery: any[] = [];
   loading: boolean = false;
   sparqlQueryLoading: boolean = false;
   dataResource: string = "";
   generatedQuery: string = "";
-
   data: string = "";
   headers: string[] = [];
   rows: string[][] = [];
@@ -35,7 +35,7 @@ export class HomepageComponent {
 
   executeSparql() {
     const payload = {
-      props: this.checkedItems,
+      props: this.checkedItemsForQuery,
       query: this.generatedQuery
     };
     this.apiService.executeSparql(payload)
@@ -59,9 +59,18 @@ export class HomepageComponent {
       .subscribe();
   }
 
+  isUrl(value: string): boolean {
+    try {
+      new URL(value);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   executeSparqlWithClearResponse(){
     const payload = {
-      props: this.checkedItems,
+      props: this.checkedItemsForQuery,
       query: this.generatedQuery
     };
     this.apiService.executeSparql(payload)
@@ -106,10 +115,12 @@ export class HomepageComponent {
   onCheckChange(event: any, item: any) {
     if (event.target.checked) {
       this.checkedItems.push({ property: item.property, ontology: item.ontology });
+      this.checkedItemsForQuery.push({ property: item.property, ontology: item.ontology });
     } else {
       const index = this.checkedItems.findIndex((x) => x.property === item.property && x.ontology === item.ontology);
       if (index !== -1) {
         this.checkedItems.splice(index, 1);
+        this.checkedItemsForQuery.splice(index, 1);
       }
     }
   }
@@ -122,6 +133,19 @@ export class HomepageComponent {
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateSparql(payload).subscribe((data: any) => {
+      this.generatedQuery = data.query;
+      this.sparqlQueryLoading = false;
+    });
+  }
+
+  generateDynamicSparql(){
+    const payload = {
+      query: localStorage.getItem("query"),
+      dataResource: this.dataResource,
+      props: this.checkedItemsForQuery
+    }
+    this.sparqlQueryLoading = true;
+    this.apiService.generateDynamicSparql(payload).subscribe((data: any) => {
       this.generatedQuery = data.query;
       this.sparqlQueryLoading = false;
     });
@@ -154,6 +178,19 @@ export class HomepageComponent {
     });
   }
 
+  getOntologyWithPage(input: string){
+    this.loading = true;
+    this.apiService.getOntologyWithPage(input).subscribe((data: any) => {
+      localStorage.setItem("query", this.generatedQuery)
+      this.property = data.property;
+      this.isPropertyOf = data.isPropertyOf;
+      this.showProperty = true;
+      this.loading = false;
+      this.dataResource = input;
+      this.checkedItems.length = 0;
+    });
+  }
+
   openDialog(){
     const dialogConfig = new MatDialogConfig();
     dialogConfig.disableClose = true;
@@ -167,7 +204,5 @@ export class HomepageComponent {
     dialogConfig.data = payload;
     this.dialog.open(DialogConstraintsComponent, dialogConfig)
   }
-
-
 
 }

@@ -100,6 +100,33 @@ public class HelperFunctions {
         return ResponseEntity.ok(responseMap);
     }
 
+    public static ResponseEntity<Map<String, String>> generateDynamicSparqlWithProperty(
+            String sparqlQuery,
+            String dataResource,
+            List<Map<String, String>> props){
+        String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
+        StringBuilder prefixes = new StringBuilder();
+        StringBuilder newQuery = new StringBuilder();
+        for (Map<String, String> prop : props) {
+            String property = prop.get("property");
+            if(query.contains("?" + property))
+                continue;
+            String ontology = prop.get("ontology");
+            String prefix = ontology.split(":")[0];
+            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+                prefixes.append(getPrefix(prefix)).append("\n");
+            newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").append(property).append(".");
+        }
+        newQuery.append("}");
+        String newQueryString = newQuery.toString();
+        String prefixesString = prefixes.toString();
+        String fullQuery = prefixesString.concat(query);
+        fullQuery = fullQuery.concat(newQueryString);
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("query", fullQuery);
+        return ResponseEntity.ok(responseMap);
+    }
+
     private static Boolean checkIfSubjectIsLiteral(String dataResource, String property){
         Model model = ModelFactory.createDefaultModel();
         String subject = "https://dbpedia.org/data/" + dataResource + ".ttl";
