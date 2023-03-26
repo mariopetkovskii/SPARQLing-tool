@@ -125,29 +125,46 @@ export class HomepageComponent {
     }
   }
 
-  generateSparql() {
-    console.log(this.checkedItems)
+  generateSparql(limitValue: string) {
+    const num = Number(limitValue);
+    let propertyType;
+    if(this.showProperty)
+      propertyType = "property"
+    else
+      propertyType = "isPropertyOf"
     const payload = {
       dataResource: this.dataResource,
-      props: this.checkedItems
+      props: this.checkedItems,
+      propertyType: propertyType,
+      limit: num
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateSparql(payload).subscribe((data: any) => {
       this.generatedQuery = data.query;
       this.sparqlQueryLoading = false;
+      localStorage.setItem("query", this.generatedQuery)
     });
   }
 
-  generateDynamicSparql(){
+  generateDynamicSparql(limitValue: string){
+    const num = Number(limitValue);
+    let propertyType;
+    if(this.showProperty)
+      propertyType = "property"
+    else
+      propertyType = "isPropertyOf"
     const payload = {
       query: localStorage.getItem("query"),
       dataResource: this.dataResource,
-      props: this.checkedItemsForQuery
+      props: this.checkedItemsForQuery,
+      propertyType: propertyType,
+      limit: num
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateDynamicSparql(payload).subscribe((data: any) => {
       this.generatedQuery = data.query;
       this.sparqlQueryLoading = false;
+      localStorage.setItem("query", this.generatedQuery)
     });
   }
 

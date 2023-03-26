@@ -15,8 +15,10 @@ public class RequestController {
     public ResponseEntity<Map<String, String>> generateSparql(@RequestBody Map<String, Object> payload) {
         String dataResource = (String) payload.get("dataResource");
         List<Map<String, String>> props = (List<Map<String, String>>) payload.get("props");
+        String typeOfProperty = (String) payload.get("propertyType");
         dataResource = HelperFunctions.capitalizeEveryWord(dataResource);
-        return HelperFunctions.generateSparqlWithProperty(dataResource, props);
+        Integer maxLimit = (Integer) payload.get("limit");
+        return HelperFunctions.generateSparql(dataResource, props, typeOfProperty, maxLimit);
     }
 
     @PostMapping("/generateSparqlWithLabels")
@@ -39,7 +41,9 @@ public class RequestController {
         String dataResource = (String) payload.get("dataResource");
         List<Map<String, String>> props = (List<Map<String, String>>) payload.get("props");
         String query = (String) payload.get("query");
-        return HelperFunctions.generateDynamicSparqlWithProperty(query, dataResource, props);
+        String typeOfProperty = (String) payload.get("propertyType");
+        Integer maxLimit = (Integer) payload.get("limit");
+        return HelperFunctions.generateDynamicSparql(query, dataResource, props, typeOfProperty, maxLimit);
     }
 
 }

@@ -87,9 +87,10 @@
       </div>
     </div>
   </div>
-  <button class="btn btn-primary mt-4" (click)="generateSparql()">Generate</button>
+  <button class="btn btn-primary mt-4" (click)="generateSparql(limitInput.value)">Generate</button>
   <button class="btn btn-primary mt-4" (click)="generateSparqlWithLabels()">Generate With Labels</button>
-  <button class="btn btn-primary mt-4" (click)="generateDynamicSparql()">Generate Dynamic</button>
+  <button class="btn btn-primary mt-4" (click)="generateDynamicSparql(limitInput.value)">Generate Dynamic</button>
+  <input type="number" class="form-control mt-4" value="0" style="width: 15%" #limitInput>
   <div *ngIf="formattedResults && formattedResults.length > 0">
     <table mat-table [dataSource]="formattedResults" class="mat-elevation-z8 mt-4 mb-4">
       <ng-container *ngFor="let key of keys" [matColumnDef]="key">

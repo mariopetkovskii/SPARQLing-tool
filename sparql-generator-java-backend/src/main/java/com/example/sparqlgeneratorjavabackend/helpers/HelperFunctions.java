@@ -39,9 +39,22 @@ public class HelperFunctions {
         };
     }
 
+    public static ResponseEntity<Map<String, String>> generateSparql(
+            String dataResource,
+            List<Map<String, String>> props,
+            String propertyType,
+            Integer maxLimit){
+        if(propertyType.equals("property")){
+            return generateSparqlWithProperty(dataResource, props, maxLimit);
+        }else{
+            return generateSparqlWithIsPropertyOf(dataResource, props, maxLimit);
+        }
+    }
+
     public static ResponseEntity<Map<String, String>> generateSparqlWithProperty(
             String dataResource,
-            List<Map<String, String>> props){
+            List<Map<String, String>> props,
+            Integer maxLimit){
         StringBuilder queryBuilder = new StringBuilder();
         String querySelector = "SELECT * WHERE {"
                 + "<http://dbpedia.org/resource/" + dataResource + "> ";
@@ -59,6 +72,40 @@ public class HelperFunctions {
         query = new StringBuilder(query.substring(0, query.length() - 2));
         queryBuilder.append(query);
         queryBuilder.append(". }");
+        if(maxLimit > 0){
+            queryBuilder.append("LIMIT ").append(maxLimit);
+        }
+        String queryString = queryBuilder.toString();
+        String prefixesString = prefixes.toString();
+        String fullQuery = prefixesString.concat(queryString);
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("query", fullQuery);
+        return ResponseEntity.ok(responseMap);
+    }
+
+    public static ResponseEntity<Map<String, String>> generateSparqlWithIsPropertyOf(
+            String dataResource,
+            List<Map<String, String>> props,
+            Integer maxLimit){
+        StringBuilder queryBuilder = new StringBuilder();
+        String querySelector = "SELECT * WHERE {";
+        queryBuilder.append(querySelector);
+        StringBuilder query = new StringBuilder();
+        StringBuilder prefixes = new StringBuilder();
+        for (Map<String, String> prop : props) {
+            String property = prop.get("property");
+            String ontology = prop.get("ontology");
+            String prefix = ontology.split(":")[0];
+            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+                prefixes.append(getPrefix(prefix)).append("\n");
+            query.append("?").append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
+        }
+        query = new StringBuilder(query.substring(0, query.length() - 2));
+        queryBuilder.append(query);
+        queryBuilder.append(". }");
+        if(maxLimit > 0){
+            queryBuilder.append("LIMIT ").append(maxLimit);
+        }
         String queryString = queryBuilder.toString();
         String prefixesString = prefixes.toString();
         String fullQuery = prefixesString.concat(queryString);
@@ -100,10 +147,24 @@ public class HelperFunctions {
         return ResponseEntity.ok(responseMap);
     }
 
+    public static ResponseEntity<Map<String, String>> generateDynamicSparql(
+            String sparqlQuery,
+            String dataResource,
+            List<Map<String, String>> props,
+            String typeOfProperty,
+            Integer maxLimit){
+        if(typeOfProperty.equals("property")){
+            return generateDynamicSparqlWithProperty(sparqlQuery, dataResource, props, maxLimit);
+        }else{
+            return generateDynamicSparqlWithIsPropertyOf(sparqlQuery, dataResource, props, maxLimit);
+        }
+    }
+
     public static ResponseEntity<Map<String, String>> generateDynamicSparqlWithProperty(
             String sparqlQuery,
             String dataResource,
-            List<Map<String, String>> props){
+            List<Map<String, String>> props,
+            Integer maxLimit){
         String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
         StringBuilder prefixes = new StringBuilder();
         StringBuilder newQuery = new StringBuilder();
@@ -122,6 +183,49 @@ public class HelperFunctions {
         String prefixesString = prefixes.toString();
         String fullQuery = prefixesString.concat(query);
         fullQuery = fullQuery.concat(newQueryString);
+        if(maxLimit > 0 && !fullQuery.contains("LIMIT ")){
+            newQuery.append("LIMIT ").append(maxLimit);
+        }else if(fullQuery.contains("LIMIT ")){
+            fullQuery = fullQuery.replace("}LIMIT", "");
+            fullQuery = fullQuery + ("LIMIT " + maxLimit);
+        }
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("query", fullQuery);
+        return ResponseEntity.ok(responseMap);
+    }
+
+    public static ResponseEntity<Map<String, String>> generateDynamicSparqlWithIsPropertyOf(
+            String sparqlQuery,
+            String dataResource,
+            List<Map<String, String>> props,
+            Integer maxLimit){
+        String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
+        StringBuilder prefixes = new StringBuilder();
+        StringBuilder newQuery = new StringBuilder();
+        for (Map<String, String> prop : props) {
+            String property = prop.get("property");
+            if(query.contains("?" + property))
+                continue;
+            String ontology = prop.get("ontology");
+            String prefix = ontology.split(":")[0];
+            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+                prefixes.append(getPrefix(prefix)).append("\n");
+            newQuery.append("?").append(property).append(" ").append(ontology).append(" <").append(dataResource).append(">.").append("\n");
+        }
+        newQuery.append("}");
+        if(maxLimit > 0){
+            newQuery.append("LIMIT ").append(maxLimit);
+        }
+        String newQueryString = newQuery.toString();
+        String prefixesString = prefixes.toString();
+        String fullQuery = prefixesString.concat(query);
+        fullQuery = fullQuery.concat(newQueryString);
+        if(maxLimit > 0 && !fullQuery.contains("LIMIT ")){
+            newQuery.append("LIMIT ").append(maxLimit);
+        }else if(fullQuery.contains("LIMIT ")){
+            fullQuery = fullQuery.replace("}LIMIT", "");
+            fullQuery = fullQuery + ("LIMIT " + maxLimit);
+        }
         Map<String, String> responseMap = new HashMap<>();
         responseMap.put("query", fullQuery);
         return ResponseEntity.ok(responseMap);
@@ -141,44 +245,6 @@ public class HelperFunctions {
         }
         return false;
     }
-
-//    public static JsonArray executeQuery(String queryString, List<Map<String, String>> props){
-//
-//        JsonArray jsonArray = new JsonArray();
-//
-//
-//        Query query = QueryFactory.create(queryString);
-//        String SPARQLEndpoint = "https://dbpedia.org/sparql";
-//        StringBuilder stringBuilder = new StringBuilder();
-//        for (int i = 0; i < props.size(); i++){
-//            Map<String, String> prop = props.get(i);
-//            stringBuilder.append(prop.get("property"));
-//            if (i < props.size() - 1) {
-//                stringBuilder.append(",");
-//            }
-//        }
-//        stringBuilder.append("\n");
-//        try(QueryExecution execution = QueryExecutionFactory.sparqlService(SPARQLEndpoint, query)){
-//            ResultSet resultSet = execution.execSelect();
-//            while (resultSet.hasNext()) {
-//                JsonObject jsonObject = new JsonObject();
-//                QuerySolution solution = resultSet.nextSolution();
-//                for (int i = 0; i < props.size(); i++){
-//                    Map<String, String> prop = props.get(i);
-//                    stringBuilder.append(solution.get(prop.get("property")));
-//                    jsonObject.add(prop.get("property"), (JsonElement) solution.get(prop.get("property").toString()));
-//                    if (i < props.size() - 1) {
-//                        stringBuilder.append(",");
-//                    }
-//                }
-//                jsonArray.add(jsonObject);
-//                stringBuilder.append("\n");
-//            }
-//        }
-//        String csv = stringBuilder.toString();
-//        csv = csv.substring(0, csv.length() - 1 );
-//        return jsonArray;
-//    }
 
     public static List<Map<String, String>> executeQuery(String queryString, List<Map<String, String>> props){
 
