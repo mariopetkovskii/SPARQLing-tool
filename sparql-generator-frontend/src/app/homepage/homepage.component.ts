@@ -4,6 +4,7 @@ import {ApiService} from '../api-service';
 import {DialogPosition, MatDialog, MatDialogConfig} from '@angular/material/dialog';
 import {DialogConstraintsComponent} from "../dialog-constraints/dialog-constraints.component";
 import {map} from 'rxjs/operators';
+import {MatTabChangeEvent} from "@angular/material/tabs";
 
 interface Result {
   [key: string]: any;
@@ -28,6 +29,8 @@ export class HomepageComponent {
   headers: string[] = [];
   rows: string[][] = [];
   formattedResults: any;
+  selectedIndex = 0;
+  showTabChoose = false;
   keys: string[] = [];
 
   constructor(private apiService: ApiService,
@@ -192,6 +195,7 @@ export class HomepageComponent {
       this.showProperty = true;
       this.loading = false;
       this.dataResource = input;
+      this.showTabChoose = true;
     });
   }
 
@@ -207,6 +211,19 @@ export class HomepageComponent {
       this.checkedItems.length = 0;
     });
   }
+
+  onTabChange(event: MatTabChangeEvent) {
+    const index = event.index;
+    this.selectedIndex = event.index;
+    if (index === 0) {
+      // call the showProperty function
+      this.showPropertyTable();
+    } else if (index === 1) {
+      // call the showIsPropertyOf function
+      this.showIsPropertyOfTable();
+    }
+  }
+
 
   openDialog(){
     const dialogConfig = new MatDialogConfig();

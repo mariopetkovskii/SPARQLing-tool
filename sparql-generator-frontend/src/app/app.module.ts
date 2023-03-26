@@ -9,6 +9,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import { DialogConstraintsComponent } from './dialog-constraints/dialog-constraints.component';
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatTableModule} from "@angular/material/table";
+import {MatTabsModule} from "@angular/material/tabs";
 
 @NgModule({
   declarations: [
@@ -23,7 +24,8 @@ import {MatTableModule} from "@angular/material/table";
     FormsModule,
     MatDialogModule,
     ReactiveFormsModule,
-    MatTableModule
+    MatTableModule,
+    MatTabsModule
   ],
   providers: [],
   bootstrap: [AppComponent]
