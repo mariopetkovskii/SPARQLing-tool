@@ -1,11 +1,19 @@
 <form [formGroup]="itemsForm" class="commentForm">
   <div class="row">
     <div class="col-15">
-      Test
     </div>
-    <div class="col-80">
-      <input type="text" formControlName="comment" />
-    </div>
+  </div>
+
+  <div *ngIf="isStringLanguage">
+    <input type="text"  #languageInput>
+    <button
+      type="submit"
+      mat-raised-button
+      color="primary"
+      (click)="submitFormForLanguage(languageInput.value)"
+    >
+      Submit
+    </button>
   </div>
 
   <div mat-dialog-actions>
@@ -13,9 +21,8 @@
       type="submit"
       mat-raised-button
       color="primary"
-      (click)="randomClick()"
     >
-      {{dataResource}}
+      Submit
     </button>
     <button
       mat-button

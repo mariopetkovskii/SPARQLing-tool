@@ -32,6 +32,10 @@ export class HomepageComponent {
   selectedIndex = 0;
   showTabChoose = false;
   keys: string[] = [];
+  distinctChecked = false;
+  clickedColumn: string = "";
+  columnName: string = "";
+  language: string = "";
 
   constructor(private apiService: ApiService,
               private dialog: MatDialog) {}
@@ -60,6 +64,19 @@ export class HomepageComponent {
         })
       )
       .subscribe();
+  }
+
+  logColumnName(columnName: string) {
+    console.log(columnName);
+    console.log(this.formattedResults[0][columnName])
+    this.clickedColumn = this.formattedResults[0][columnName]
+    this.columnName = columnName
+    this.openDialog()
+  }
+
+  onChangeDistinct(event: any){
+    this.distinctChecked = event.target.checked;
+    console.log(this.distinctChecked)
   }
 
   isUrl(value: string): boolean {
@@ -139,7 +156,8 @@ export class HomepageComponent {
       dataResource: this.dataResource,
       props: this.checkedItems,
       propertyType: propertyType,
-      limit: num
+      limit: num,
+      selectDistinct: this.distinctChecked
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateSparql(payload).subscribe((data: any) => {
@@ -161,7 +179,8 @@ export class HomepageComponent {
       dataResource: this.dataResource,
       props: this.checkedItemsForQuery,
       propertyType: propertyType,
-      limit: num
+      limit: num,
+      selectDistinct: this.distinctChecked
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateDynamicSparql(payload).subscribe((data: any) => {
@@ -209,6 +228,7 @@ export class HomepageComponent {
       this.loading = false;
       this.dataResource = input;
       this.checkedItems.length = 0;
+
     });
   }
 
@@ -224,6 +244,24 @@ export class HomepageComponent {
     }
   }
 
+  isLanguageFilterPresent(generatedQuery: string, columnName: string): boolean {
+    const languageFilterString = "filter(langMatches(lang(?" + columnName + "),\"";
+    return generatedQuery.includes(languageFilterString);
+  }
+
+
+  changeQueryToFilterByLang(language: string) {
+    const languageFilterString = "filter(langMatches(lang(?" + this.columnName + "),\"";
+    if (this.isLanguageFilterPresent(this.generatedQuery, this.columnName)) {
+      const startIndex = this.generatedQuery.indexOf(languageFilterString) + languageFilterString.length;
+      const endIndex = this.generatedQuery.indexOf("\")", startIndex);
+      const currentLanguage = this.generatedQuery.slice(startIndex, endIndex);
+      this.generatedQuery = this.generatedQuery.replace(currentLanguage, language);
+    } else {
+      const languageAppend = languageFilterString + language + "\")) ";
+      this.generatedQuery = this.generatedQuery.replace(/\}\s*$/, `${languageAppend}}`);
+    }
+  }
 
   openDialog(){
     const dialogConfig = new MatDialogConfig();
@@ -233,10 +271,17 @@ export class HomepageComponent {
     dialogConfig.panelClass = 'my-dialog-class';
     const payload = {
       dataResource: this.dataResource,
-      props: this.checkedItems
+      props: this.checkedItems,
+      clickedColumn: this.clickedColumn,
+      query: this.generatedQuery,
+      columnName: this.columnName
     }
     dialogConfig.data = payload;
-    this.dialog.open(DialogConstraintsComponent, dialogConfig)
+    const dialogRef = this.dialog.open(DialogConstraintsComponent, dialogConfig);
+    dialogRef.afterClosed().subscribe(result => {
+      this.language = result;
+      this.changeQueryToFilterByLang(this.language)
+    })
   }
 
 }

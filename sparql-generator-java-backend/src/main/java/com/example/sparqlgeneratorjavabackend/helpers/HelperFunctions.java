@@ -43,21 +43,29 @@ public class HelperFunctions {
             String dataResource,
             List<Map<String, String>> props,
             String propertyType,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         if(propertyType.equals("property")){
-            return generateSparqlWithProperty(dataResource, props, maxLimit);
+            return generateSparqlWithProperty(dataResource, props, maxLimit, selectDistinct);
         }else{
-            return generateSparqlWithIsPropertyOf(dataResource, props, maxLimit);
+            return generateSparqlWithIsPropertyOf(dataResource, props, maxLimit, selectDistinct);
         }
     }
 
     public static ResponseEntity<Map<String, String>> generateSparqlWithProperty(
             String dataResource,
             List<Map<String, String>> props,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         StringBuilder queryBuilder = new StringBuilder();
-        String querySelector = "SELECT * WHERE {"
-                + "<http://dbpedia.org/resource/" + dataResource + "> ";
+        String querySelector;
+        if(selectDistinct) {
+            querySelector = "SELECT DISTINCT * WHERE {"
+                    + "<http://dbpedia.org/resource/" + dataResource + "> ";
+        }else {
+            querySelector = "SELECT * WHERE {"
+                    + "<http://dbpedia.org/resource/" + dataResource + "> ";
+        }
         queryBuilder.append(querySelector);
         StringBuilder query = new StringBuilder();
         StringBuilder prefixes = new StringBuilder();
@@ -86,9 +94,16 @@ public class HelperFunctions {
     public static ResponseEntity<Map<String, String>> generateSparqlWithIsPropertyOf(
             String dataResource,
             List<Map<String, String>> props,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         StringBuilder queryBuilder = new StringBuilder();
-        String querySelector = "SELECT * WHERE {";
+        String querySelector;
+        if(selectDistinct) {
+            querySelector = "SELECT DISTINCT * WHERE {";
+
+        }else {
+            querySelector = "SELECT * WHERE {";
+        }
         queryBuilder.append(querySelector);
         StringBuilder query = new StringBuilder();
         StringBuilder prefixes = new StringBuilder();
@@ -152,11 +167,12 @@ public class HelperFunctions {
             String dataResource,
             List<Map<String, String>> props,
             String typeOfProperty,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         if(typeOfProperty.equals("property")){
-            return generateDynamicSparqlWithProperty(sparqlQuery, dataResource, props, maxLimit);
+            return generateDynamicSparqlWithProperty(sparqlQuery, dataResource, props, maxLimit, selectDistinct);
         }else{
-            return generateDynamicSparqlWithIsPropertyOf(sparqlQuery, dataResource, props, maxLimit);
+            return generateDynamicSparqlWithIsPropertyOf(sparqlQuery, dataResource, props, maxLimit, selectDistinct);
         }
     }
 
@@ -164,8 +180,14 @@ public class HelperFunctions {
             String sparqlQuery,
             String dataResource,
             List<Map<String, String>> props,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
+        if(selectDistinct) {
+            query = query.replace("SELECT *", "SELECT DISTINCT *");
+        }else{
+            query = query.replace("SELECT DISTINCT *", "SELECT *");
+        }
         StringBuilder prefixes = new StringBuilder();
         StringBuilder newQuery = new StringBuilder();
         for (Map<String, String> prop : props) {
@@ -198,8 +220,14 @@ public class HelperFunctions {
             String sparqlQuery,
             String dataResource,
             List<Map<String, String>> props,
-            Integer maxLimit){
+            Integer maxLimit,
+            Boolean selectDistinct){
         String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
+        if(selectDistinct) {
+            query = query.replace("SELECT *", "SELECT DISTINCT *");
+        }else{
+            query = query.replace("SELECT DISTINCT *", "SELECT *");
+        }
         StringBuilder prefixes = new StringBuilder();
         StringBuilder newQuery = new StringBuilder();
         for (Map<String, String> prop : props) {

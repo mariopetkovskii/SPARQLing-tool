@@ -18,7 +18,8 @@ public class RequestController {
         String typeOfProperty = (String) payload.get("propertyType");
         dataResource = HelperFunctions.capitalizeEveryWord(dataResource);
         Integer maxLimit = (Integer) payload.get("limit");
-        return HelperFunctions.generateSparql(dataResource, props, typeOfProperty, maxLimit);
+        Boolean selectDistinct = (Boolean) payload.get("selectDistinct");
+        return HelperFunctions.generateSparql(dataResource, props, typeOfProperty, maxLimit, selectDistinct);
     }
 
     @PostMapping("/generateSparqlWithLabels")
@@ -43,7 +44,8 @@ public class RequestController {
         String query = (String) payload.get("query");
         String typeOfProperty = (String) payload.get("propertyType");
         Integer maxLimit = (Integer) payload.get("limit");
-        return HelperFunctions.generateDynamicSparql(query, dataResource, props, typeOfProperty, maxLimit);
+        Boolean selectDistinct = (Boolean) payload.get("selectDistinct");
+        return HelperFunctions.generateDynamicSparql(query, dataResource, props, typeOfProperty, maxLimit, selectDistinct);
     }
 
 }

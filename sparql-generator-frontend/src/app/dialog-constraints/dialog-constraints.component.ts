@@ -14,6 +14,9 @@ import {Router} from "@angular/router";
 })
 export class DialogConstraintsComponent implements OnInit{
   itemsForm: any;
+  filterType: string = "";
+  isStringLanguage: boolean = false;
+  languageString: string = "";
 
   constructor(public dialogRef: MatDialogRef<DialogConstraintsComponent>,
               private fb: FormBuilder,
@@ -30,6 +33,8 @@ export class DialogConstraintsComponent implements OnInit{
     this.itemsForm = this.fb.group({
       comment: ['', Validators.required]
     });
+    this.setXmlSchemaType(this.clickedColumn)
+    this.isStringLanguage = this.isLanguage(this.clickedColumn)
   }
 
   cancelClick() {
@@ -39,8 +44,52 @@ export class DialogConstraintsComponent implements OnInit{
     return this.data.dataResource;
   }
 
-  randomClick(){
-    console.log(this.data)
+  get query(){
+    return this.data.query
+  }
+
+  get clickedColumn(){
+    return this.data.clickedColumn;
+  }
+
+  get columnName(){
+    return this.data.columnName;
+  }
+
+  submitFormForLanguage(input: string): void{
+    this.languageString = input;
+      this.dialogRef.close(this.languageString);
+  }
+
+  setXmlSchemaType(value: string): void {
+    const pattern = /(.+)\^\^http:\/\/www\.w3\.org\/2001\/XMLSchema#(\w+)/;
+    const match = pattern.exec(value);
+
+    if (match !== null) {
+      const dataType = match[2];
+
+      switch (dataType) {
+        case "boolean":
+        case "integer":
+        case "decimal":
+        case "string":
+        case "duration":
+        case "dateTime":
+        case "date":
+        case "time":
+          this.filterType = dataType;
+          break;
+        default:
+          break;
+      }
+    } else {
+    }
+  }
+
+  isLanguage(input: string): boolean{
+    const regex = /@\w{2}$/;
+
+    return regex.test(input);
   }
 
 
