@@ -57,8 +57,11 @@ export class DialogConstraintsComponent implements OnInit{
   }
 
   submitFormForLanguage(input: string): void{
-    this.languageString = input;
-      this.dialogRef.close(this.languageString);
+    const payload = {
+      type: "language",
+      language: input
+    }
+    this.dialogRef.close(payload);
   }
 
   setXmlSchemaType(value: string): void {
@@ -67,6 +70,7 @@ export class DialogConstraintsComponent implements OnInit{
 
     if (match !== null) {
       const dataType = match[2];
+      console.log(dataType)
 
       switch (dataType) {
         case "boolean":

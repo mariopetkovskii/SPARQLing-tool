@@ -9,6 +9,7 @@ import {MatTabChangeEvent} from "@angular/material/tabs";
 interface Result {
   [key: string]: any;
 }
+
 @Component({
   selector: 'app-homepage',
   templateUrl: './homepage.component.html',
@@ -36,14 +37,15 @@ export class HomepageComponent {
   clickedColumn: string = "";
   columnName: string = "";
   language: string = "";
+  map: Map<string, string> = new Map<string, string>();
 
   constructor(private apiService: ApiService,
-              private dialog: MatDialog) {}
+              private dialog: MatDialog) {
+  }
 
-  executeSparql() {
+  executeSparql(input: string) {
     const payload = {
-      props: this.checkedItemsForQuery,
-      query: this.generatedQuery
+      query: input
     };
     this.apiService.executeSparql(payload)
       .pipe(
@@ -60,10 +62,13 @@ export class HomepageComponent {
           });
           this.formattedResults = formattedResults;
           this.keys = keys;
-
         })
       )
-      .subscribe();
+      .subscribe(
+        () => {
+          this.checkedItemsForQuery.length = 0;
+        }
+      );
   }
 
   logColumnName(columnName: string) {
@@ -74,7 +79,7 @@ export class HomepageComponent {
     this.openDialog()
   }
 
-  onChangeDistinct(event: any){
+  onChangeDistinct(event: any) {
     this.distinctChecked = event.target.checked;
     console.log(this.distinctChecked)
   }
@@ -88,7 +93,7 @@ export class HomepageComponent {
     }
   }
 
-  executeSparqlWithClearResponse(){
+  executeSparqlWithClearResponse() {
     const payload = {
       props: this.checkedItemsForQuery,
       query: this.generatedQuery
@@ -114,8 +119,8 @@ export class HomepageComponent {
       .subscribe();
   }
 
-  showTableQueryExecute(){
-    if(this.formattedResults > 0)
+  showTableQueryExecute() {
+    if (this.formattedResults > 0)
       return true;
     return false;
   }
@@ -134,8 +139,8 @@ export class HomepageComponent {
 
   onCheckChange(event: any, item: any) {
     if (event.target.checked) {
-      this.checkedItems.push({ property: item.property, ontology: item.ontology });
-      this.checkedItemsForQuery.push({ property: item.property, ontology: item.ontology });
+      this.checkedItems.push({property: item.property, ontology: item.ontology});
+      this.checkedItemsForQuery.push({property: item.property, ontology: item.ontology});
     } else {
       const index = this.checkedItems.findIndex((x) => x.property === item.property && x.ontology === item.ontology);
       if (index !== -1) {
@@ -145,10 +150,21 @@ export class HomepageComponent {
     }
   }
 
+  onShowColumn(event: any, item: any) {
+    if (event.target.checked) {
+      this.keys.push(item);
+    } else {
+      const index = this.keys.findIndex(obj => obj === item);
+      if (index !== -1) {
+        this.keys.splice(index, 1);
+      }
+    }
+  }
+
   generateSparql(limitValue: string) {
     const num = Number(limitValue);
     let propertyType;
-    if(this.showProperty)
+    if (this.showProperty)
       propertyType = "property"
     else
       propertyType = "isPropertyOf"
@@ -163,14 +179,16 @@ export class HomepageComponent {
     this.apiService.generateSparql(payload).subscribe((data: any) => {
       this.generatedQuery = data.query;
       this.sparqlQueryLoading = false;
-      localStorage.setItem("query", this.generatedQuery)
+      localStorage.setItem("query", this.generatedQuery);
+      this.checkedItems.length = 0;
+      this.checkedItemsForQuery.length = 0;
     });
   }
 
-  generateDynamicSparql(limitValue: string){
+  generateDynamicSparql(limitValue: string) {
     const num = Number(limitValue);
     let propertyType;
-    if(this.showProperty)
+    if (this.showProperty)
       propertyType = "property"
     else
       propertyType = "isPropertyOf"
@@ -187,23 +205,11 @@ export class HomepageComponent {
       this.generatedQuery = data.query;
       this.sparqlQueryLoading = false;
       localStorage.setItem("query", this.generatedQuery)
+      this.checkedItemsForQuery.length = 0;
     });
   }
 
-  generateSparqlWithLabels() {
-    console.log(this.checkedItems)
-    const payload = {
-      dataResource: this.dataResource,
-      props: this.checkedItems
-    }
-    this.sparqlQueryLoading = true;
-    this.apiService.generateSparqlWithLabels(payload).subscribe((data: any) => {
-      this.generatedQuery = data.query;
-      this.sparqlQueryLoading = false;
-    });
-  }
-
-  getOntology(input: string){
+  getOntology(input: string) {
     input = input.replace(/\s/g, '_');
     input = input.toLowerCase().replace(/(^|\s)\S/g, (letter: string) => letter.toUpperCase());
     console.log(input)
@@ -218,7 +224,8 @@ export class HomepageComponent {
     });
   }
 
-  getOntologyWithPage(input: string){
+  getOntologyWithPage(input: string, columnName: string) {
+    console.log(columnName)
     this.loading = true;
     this.apiService.getOntologyWithPage(input).subscribe((data: any) => {
       localStorage.setItem("query", this.generatedQuery)
@@ -228,7 +235,8 @@ export class HomepageComponent {
       this.loading = false;
       this.dataResource = input;
       this.checkedItems.length = 0;
-
+      // @ts-ignore
+      this.map.set("<" + input + ">", "?" + columnName)
     });
   }
 
@@ -249,6 +257,18 @@ export class HomepageComponent {
     return generatedQuery.includes(languageFilterString);
   }
 
+  swapMapKeyAndValue(): string {
+    this.map.forEach((value, key) => {
+      this.generatedQuery = this.generatedQuery.replace(key, value)
+    })
+    return this.generatedQuery
+  }
+
+  swapUrlWithItsVariable(){
+    this.map.forEach((value, key) => {
+      this.generatedQuery = this.generatedQuery.replace(key, value)
+    })
+  }
 
   changeQueryToFilterByLang(language: string) {
     const languageFilterString = "filter(langMatches(lang(?" + this.columnName + "),\"";
@@ -263,7 +283,41 @@ export class HomepageComponent {
     }
   }
 
-  openDialog(){
+  tableToCsv(): void {
+    const table = document.getElementById("myTable");
+    // @ts-ignore
+    const rows = table.querySelectorAll("tr");
+
+    // get table header
+    // @ts-ignore
+    const header = Array.from(rows[0].querySelectorAll("th")).map((th) => th.textContent.trim());
+
+    // get table data
+    const data = Array.from(rows)
+      .slice(1)
+      .map((row) => {
+        // @ts-ignore
+        const rowData = Array.from(row.querySelectorAll("td")).map((cell) => cell.textContent.trim());
+        return rowData.join(",");
+      })
+      .join("\n");
+
+    // create csv content
+    const csv = `${header.join(",")}\n${data}`;
+
+    // download csv file
+    const filename = "table-data.csv";
+    const link = document.createElement("a");
+    link.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(csv));
+    link.setAttribute("download", filename);
+    link.style.display = "none";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+
+  openDialog() {
     const dialogConfig = new MatDialogConfig();
     dialogConfig.disableClose = true;
     dialogConfig.autoFocus = true;
@@ -279,8 +333,10 @@ export class HomepageComponent {
     dialogConfig.data = payload;
     const dialogRef = this.dialog.open(DialogConstraintsComponent, dialogConfig);
     dialogRef.afterClosed().subscribe(result => {
-      this.language = result;
-      this.changeQueryToFilterByLang(this.language)
+      if (result.type === "language") {
+        this.language = result.language;
+        this.changeQueryToFilterByLang(this.language)
+      }
     })
   }
 

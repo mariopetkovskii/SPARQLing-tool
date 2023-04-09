@@ -75,7 +75,7 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            query.append(ontology).append(" ?").append(property).append(";").append("\n");
+            query.append(ontology).append(" ?").append(property).append(dataResource.replace("_", "")).append(";").append("\n");
         }
         query = new StringBuilder(query.substring(0, query.length() - 2));
         queryBuilder.append(query);
@@ -113,7 +113,7 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            query.append("?").append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
+            query.append("?").append(dataResource.replace("_", "")).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
         }
         query = new StringBuilder(query.substring(0, query.length() - 2));
         queryBuilder.append(query);
@@ -198,7 +198,10 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").append(property).append(".");
+            newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").
+                    append(property).
+                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@]", "")).
+                    append(".");
         }
         newQuery.append("}");
         String newQueryString = newQuery.toString();
@@ -238,7 +241,9 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            newQuery.append("?").append(property).append(" ").append(ontology).append(" <").append(dataResource).append(">.").append("\n");
+            newQuery.append("?").
+                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@]", "")).
+                    append(property).append(" ").append(ontology).append(" <").append(dataResource).append(">.").append("\n");
         }
         newQuery.append("}");
         if(maxLimit > 0){
@@ -274,7 +279,7 @@ public class HelperFunctions {
         return false;
     }
 
-    public static List<Map<String, String>> executeQuery(String queryString, List<Map<String, String>> props){
+    public static List<Map<String, String>> executeQuery(String queryString){
 
         List<Map<String, String>> resultList = new ArrayList<>();
 
@@ -286,10 +291,10 @@ public class HelperFunctions {
             while (resultSet.hasNext()) {
                 Map<String, String> resultMap = new HashMap<>();
                 QuerySolution solution = resultSet.nextSolution();
-                for (int i = 0; i < props.size(); i++){
-                    Map<String, String> prop = props.get(i);
-                    resultMap.put(prop.get("property"), String.valueOf(solution.get(prop.get("property"))));
-                }
+                solution.varNames().forEachRemaining(varName -> {
+                    String value = solution.get(varName).toString();
+                    resultMap.put(varName, value);
+                });
                 resultList.add(resultMap);
             }
         }

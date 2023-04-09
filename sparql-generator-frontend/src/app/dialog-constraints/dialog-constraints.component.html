@@ -5,7 +5,19 @@
   </div>
 
   <div *ngIf="isStringLanguage">
-    <input type="text"  #languageInput>
+    <input type="text" #languageInput>
+    <button
+      type="submit"
+      mat-raised-button
+      color="primary"
+      (click)="submitFormForLanguage(languageInput.value)"
+    >
+      Submit
+    </button>
+  </div>
+
+  <div *ngIf="filterType === 'date'">
+    <input type="text" #languageInput>
     <button
       type="submit"
       mat-raised-button
