@@ -129,6 +129,45 @@ public class HelperFunctions {
         return ResponseEntity.ok(responseMap);
     }
 
+//    public static ResponseEntity<Map<String, String>> generateSparqlWithIsPropertyOf(
+//            String dataResource,
+//            List<Map<String, String>> props,
+//            Integer maxLimit,
+//            Boolean selectDistinct){
+//        StringBuilder queryBuilder = new StringBuilder();
+//        String querySelector;
+//        if(selectDistinct) {
+//            querySelector = "SELECT DISTINCT * WHERE {";
+//
+//        }else {
+//            querySelector = "SELECT * WHERE {{";
+//        }
+//        queryBuilder.append(querySelector);
+//        StringBuilder query = new StringBuilder();
+//        StringBuilder prefixes = new StringBuilder();
+//        for (Map<String, String> prop : props) {
+//            String property = prop.get("property");
+//            String ontology = prop.get("ontology");
+//            String prefix = ontology.split(":")[0];
+//            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+//                prefixes.append(getPrefix(prefix)).append("\n");
+//            query.append("?").append(dataResource.replace("_", "")).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
+//            query.append("} union {");
+//        }
+//        query = new StringBuilder(query.substring(0, query.length() - 10));
+//        queryBuilder.append(query);
+//        queryBuilder.append(" }}");
+//        if(maxLimit > 0){
+//            queryBuilder.append("LIMIT ").append(maxLimit);
+//        }
+//        String queryString = queryBuilder.toString();
+//        String prefixesString = prefixes.toString();
+//        String fullQuery = prefixesString.concat(queryString);
+//        Map<String, String> responseMap = new HashMap<>();
+//        responseMap.put("query", fullQuery);
+//        return ResponseEntity.ok(responseMap);
+//    }
+
     public static ResponseEntity<Map<String, String>> generateSparqlWithPropertyWithLabels(
             String dataResource,
             List<Map<String, String>> props){
@@ -192,15 +231,17 @@ public class HelperFunctions {
         StringBuilder newQuery = new StringBuilder();
         for (Map<String, String> prop : props) {
             String property = prop.get("property");
-            if(query.contains("?" + property))
-                continue;
             String ontology = prop.get("ontology");
             String prefix = ontology.split(":")[0];
-            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix))) {
                 prefixes.append(getPrefix(prefix)).append("\n");
+                if(query.contains(prefixes)){
+                    prefixes.delete(0, prefixes.length());
+                }
+            }
             newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").
                     append(property).
-                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@]", "")).
+                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@'\"]", "")).
                     append(".");
         }
         newQuery.append("}");
@@ -209,7 +250,7 @@ public class HelperFunctions {
         String fullQuery = prefixesString.concat(query);
         fullQuery = fullQuery.concat(newQueryString);
         if(maxLimit > 0 && !fullQuery.contains("LIMIT ")){
-            newQuery.append("LIMIT ").append(maxLimit);
+            fullQuery = fullQuery + ("LIMIT " + maxLimit);
         }else if(fullQuery.contains("LIMIT ")){
             fullQuery = fullQuery.replace("}LIMIT", "");
             fullQuery = fullQuery + ("LIMIT " + maxLimit);
@@ -235,14 +276,16 @@ public class HelperFunctions {
         StringBuilder newQuery = new StringBuilder();
         for (Map<String, String> prop : props) {
             String property = prop.get("property");
-            if(query.contains("?" + property))
-                continue;
             String ontology = prop.get("ontology");
             String prefix = ontology.split(":")[0];
-            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
+            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix))) {
                 prefixes.append(getPrefix(prefix)).append("\n");
+                if(query.contains(prefixes)){
+                    prefixes.delete(0, prefixes.length());
+                }
+            }
             newQuery.append("?").
-                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@]", "")).
+                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@'\"]", "")).
                     append(property).append(" ").append(ontology).append(" <").append(dataResource).append(">.").append("\n");
         }
         newQuery.append("}");
@@ -254,7 +297,7 @@ public class HelperFunctions {
         String fullQuery = prefixesString.concat(query);
         fullQuery = fullQuery.concat(newQueryString);
         if(maxLimit > 0 && !fullQuery.contains("LIMIT ")){
-            newQuery.append("LIMIT ").append(maxLimit);
+            fullQuery = fullQuery + ("LIMIT " + maxLimit);
         }else if(fullQuery.contains("LIMIT ")){
             fullQuery = fullQuery.replace("}LIMIT", "");
             fullQuery = fullQuery + ("LIMIT " + maxLimit);

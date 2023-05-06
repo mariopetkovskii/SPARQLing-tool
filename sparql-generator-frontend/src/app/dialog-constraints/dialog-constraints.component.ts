@@ -17,6 +17,7 @@ export class DialogConstraintsComponent implements OnInit{
   filterType: string = "";
   isStringLanguage: boolean = false;
   languageString: string = "";
+  stringContains: string = "";
 
   constructor(public dialogRef: MatDialogRef<DialogConstraintsComponent>,
               private fb: FormBuilder,
@@ -56,11 +57,53 @@ export class DialogConstraintsComponent implements OnInit{
     return this.data.columnName;
   }
 
-  submitFormForLanguage(input: string): void{
-    const payload = {
-      type: "language",
-      language: input
+  submitFormForLanguage(language: string, stringContains: string): void{
+    let payload;
+    if(language !== "" && stringContains !== ""){
+      payload = {
+        type: "languageAndStringContains",
+        language: language,
+        stringContains: stringContains
+      }
+    }else if(stringContains === "") {
+      payload = {
+        type: "language",
+        language: language,
+        stringContains: ""
+      }
+    }else {
+      payload = {
+        type: "stringContains",
+        language: "",
+        stringContains: stringContains
+      }
     }
+    console.log(payload)
+    this.dialogRef.close(payload);
+  }
+
+  submitFormForDateSorting(dateTypeOfSort: string, stringContains: string): void{
+    let payload;
+    if(dateTypeOfSort !== "" && stringContains !== ""){
+      payload = {
+        type: "dateTypeOfSortAndStringContains",
+        dateTypeOfSort: dateTypeOfSort,
+        stringContains: stringContains
+      }
+    }else if(stringContains === "") {
+      payload = {
+        type: "dateTypeOfSort",
+        dateTypeOfSort: dateTypeOfSort,
+        stringContains: ""
+      }
+    }else {
+      payload = {
+        type: "stringContains",
+        dateTypeOfSort: "",
+        stringContains: stringContains
+      }
+    }
+    console.log(payload)
     this.dialogRef.close(payload);
   }
 
@@ -73,13 +116,11 @@ export class DialogConstraintsComponent implements OnInit{
       console.log(dataType)
 
       switch (dataType) {
-        case "boolean":
-        case "integer":
-        case "decimal":
-        case "string":
-        case "duration":
         case "dateTime":
+        case "gMonthDay":
         case "date":
+          this.filterType = dataType;
+          break;
         case "time":
           this.filterType = dataType;
           break;
@@ -92,7 +133,6 @@ export class DialogConstraintsComponent implements OnInit{
 
   isLanguage(input: string): boolean{
     const regex = /@\w{2}$/;
-
     return regex.test(input);
   }
 

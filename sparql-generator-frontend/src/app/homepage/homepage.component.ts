@@ -37,6 +37,9 @@ export class HomepageComponent {
   clickedColumn: string = "";
   columnName: string = "";
   language: string = "";
+  stringConstraint: string = "";
+  dateTypeOfSort: string = "";
+  lastDateTypeOfSort: string = "";
   map: Map<string, string> = new Map<string, string>();
 
   constructor(private apiService: ApiService,
@@ -231,6 +234,7 @@ export class HomepageComponent {
       localStorage.setItem("query", this.generatedQuery)
       this.property = data.property;
       this.isPropertyOf = data.isPropertyOf;
+      this.showIsPropertyOf = false;
       this.showProperty = true;
       this.loading = false;
       this.dataResource = input;
@@ -244,10 +248,8 @@ export class HomepageComponent {
     const index = event.index;
     this.selectedIndex = event.index;
     if (index === 0) {
-      // call the showProperty function
       this.showPropertyTable();
     } else if (index === 1) {
-      // call the showIsPropertyOf function
       this.showIsPropertyOfTable();
     }
   }
@@ -256,6 +258,17 @@ export class HomepageComponent {
     const languageFilterString = "filter(langMatches(lang(?" + columnName + "),\"";
     return generatedQuery.includes(languageFilterString);
   }
+
+  isStringConstraintPresent(generatedQuery: string, columnName: string): boolean {
+    const languageFilterString = "FILTER regex(str(?" + columnName;
+    return generatedQuery.includes(languageFilterString);
+  }
+
+  isDateSortFilterPresent(generatedQuery: string, columnName: string): boolean {
+    const dateSortFilter = "ORDER BY";
+    return generatedQuery.includes(dateSortFilter);
+  }
+
 
   swapMapKeyAndValue(): string {
     this.map.forEach((value, key) => {
@@ -274,12 +287,40 @@ export class HomepageComponent {
     const languageFilterString = "filter(langMatches(lang(?" + this.columnName + "),\"";
     if (this.isLanguageFilterPresent(this.generatedQuery, this.columnName)) {
       const startIndex = this.generatedQuery.indexOf(languageFilterString) + languageFilterString.length;
+      console.log(startIndex)
       const endIndex = this.generatedQuery.indexOf("\")", startIndex);
       const currentLanguage = this.generatedQuery.slice(startIndex, endIndex);
       this.generatedQuery = this.generatedQuery.replace(currentLanguage, language);
     } else {
       const languageAppend = languageFilterString + language + "\")) ";
       this.generatedQuery = this.generatedQuery.replace(/\}\s*$/, `${languageAppend}}`);
+    }
+  }
+
+  changeQueryToFilterByStringConstraint(stringConstraint: string){
+    const stringConstraintFilterString = "FILTER regex(str(?" + this.columnName + "), \"" + stringConstraint + "\")";
+    if (this.isStringConstraintPresent(this.generatedQuery, this.columnName)) {
+      const startIndex = this.generatedQuery.indexOf(stringConstraintFilterString) + stringConstraintFilterString.length + 1;
+      console.log(startIndex)
+      const endIndex = this.generatedQuery.indexOf("\")", startIndex);
+      const currentConstraint = this.generatedQuery.slice(startIndex, endIndex);
+      this.generatedQuery = this.generatedQuery.replace(currentConstraint, stringConstraint);
+    } else {
+      const languageAppend = stringConstraintFilterString;
+      this.generatedQuery = this.generatedQuery.replace(/\}\s*$/, `${languageAppend}}`);
+    }
+  }
+
+  changeQueryToSortByDate(sortByDateType: string) {
+    const typeOfDateSort = "}ORDER BY "  + this.dateTypeOfSort + "(?" + this.columnName + ")";
+    if (this.isDateSortFilterPresent(this.generatedQuery, this.columnName)) {
+        this.generatedQuery = this.generatedQuery.replace("ORDER BY " + this.lastDateTypeOfSort, "ORDER BY " + sortByDateType);
+        console.log(this.lastDateTypeOfSort)
+        this.lastDateTypeOfSort = sortByDateType;
+    } else {
+      this.lastDateTypeOfSort = sortByDateType;
+      const sortByDate = typeOfDateSort;
+      this.generatedQuery = this.generatedQuery.replace(/\}\s*$/, `${sortByDate}`);
     }
   }
 
@@ -333,11 +374,22 @@ export class HomepageComponent {
     dialogConfig.data = payload;
     const dialogRef = this.dialog.open(DialogConstraintsComponent, dialogConfig);
     dialogRef.afterClosed().subscribe(result => {
-      if (result.type === "language") {
         this.language = result.language;
-        this.changeQueryToFilterByLang(this.language)
+        this.stringConstraint = result.stringContains;
+        this.dateTypeOfSort = result.dateTypeOfSort;
+        console.log(this.dateTypeOfSort)
+        if(result.type === "language"){
+          this.changeQueryToFilterByLang(this.language);
+        }
+        if(result.type === "stringContains"){
+          this.changeQueryToFilterByStringConstraint(this.stringConstraint);
+        }
+        if(result.type === "dateTypeOfSort"){
+          this.changeQueryToSortByDate(this.dateTypeOfSort);
+        }
+
       }
-    })
+    )
   }
 
 }

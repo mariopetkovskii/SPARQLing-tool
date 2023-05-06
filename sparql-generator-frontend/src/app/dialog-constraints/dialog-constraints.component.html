@@ -1,28 +1,37 @@
-<form [formGroup]="itemsForm" class="commentForm">
+<form [formGroup]="itemsForm" class="commentForm container">
   <div class="row">
     <div class="col-15">
     </div>
   </div>
+  Contains string:
+  <input type="text" class="form-control" #stringContains>
+
 
   <div *ngIf="isStringLanguage">
-    <input type="text" #languageInput>
+    Language:
+    <input type="text" class="form-control" #languageInput>
     <button
       type="submit"
       mat-raised-button
-      color="primary"
-      (click)="submitFormForLanguage(languageInput.value)"
+      class="btn btn-outline-secondary"
+      (click)="submitFormForLanguage(languageInput.value, stringContains.value)"
     >
       Submit
     </button>
   </div>
 
   <div *ngIf="filterType === 'date'">
-    <input type="text" #languageInput>
+    <label for="sorting-direction">Select sorting direction:</label>
+    <select name="sorting-direction" id="sorting-direction" class="form-control" #dateSortInput>
+      <option value="">Choose</option>
+      <option value="ASC">ASC</option>
+      <option value="DESC">DESC</option>
+    </select>
     <button
       type="submit"
       mat-raised-button
-      color="primary"
-      (click)="submitFormForLanguage(languageInput.value)"
+      class="btn btn-outline-secondary"
+      (click)="submitFormForDateSorting(dateSortInput.value, stringContains.value)"
     >
       Submit
     </button>
@@ -30,15 +39,8 @@
 
   <div mat-dialog-actions>
     <button
-      type="submit"
-      mat-raised-button
-      color="primary"
-    >
-      Submit
-    </button>
-    <button
       mat-button
-      class="mat-focus-indicator mat-raised-button mat-button-base mat-raised"
+      class="btn btn-secondary"
       (click)="cancelClick()"
     >
       Cancel
