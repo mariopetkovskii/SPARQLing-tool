@@ -69,7 +69,7 @@ public class HelperFunctions {
             System.out.println(part);
         }
         ontologies.forEach(queryBuilder::append);
-        queryBuilder.append("SELECT * WHERE {");
+        queryBuilder.append("\nSELECT * WHERE {");
         queryBuilder.append(queryInside.substring(0, queryInside.length() - 7));
         queryBuilder.append("}");
         System.out.println(queryBuilder);

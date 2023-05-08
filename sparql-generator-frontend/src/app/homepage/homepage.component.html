@@ -74,10 +74,7 @@
                   *ngIf="!generatedQuery">Generate
           </button>
           <button class="btn btn-secondary d-inline-block" (click)="generateDynamicSparql(limitInput.value, variableInput.value)"
-                  *ngIf="generatedQuery && !unionQueriesFlag">Generate
-          </button>
-          <button class="btn btn-secondary d-inline-block" (click)="generateUnionSparql(limitInput.value)"
-                  *ngIf="unionQueriesFlag">Generate
+                  *ngIf="generatedQuery">Generate
           </button>
         </div>
       </div>
@@ -91,7 +88,7 @@
         </div>
       </div>
       <div *ngIf="!sparqlQueryLoading">
-        <div class="mt-4">
+        <div class="mt-4" *ngIf="firstOntologyFlag">
           <label for="queryResult">SPARQL Query:</label>
           <textarea class="form-control" id="queryResult" rows="15" #inputQuery>{{generatedQuery}}</textarea>
           <button class="btn btn-secondary m-2" (click)="executeSparql(inputQuery.value)">Execute Sparql</button>
@@ -100,7 +97,13 @@
           </button>
           <button class="btn btn-secondary m-2" (click)="swapUrlWithItsVariable()">Url-Variable</button>
           <button class="btn btn-secondary m-2" (click)="saveUnionQuery()" *ngIf="unionQueriesFlag">Save Query</button>
-          <input type="checkbox" (change)="unionQueryFlagChange()">
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" (change)="unionQueryFlagChange()" [checked]="unionQueriesFlag"
+            ><label class="form-check-label">Union Query</label>
+          </div>
+          <button class="btn btn-secondary m-2" (click)="generateUnionSparql()"
+                  *ngIf="unionQueriesFlag">Merge
+          </button>
           <div *ngIf="unionQueriesFlag">
             <ul>
             <li *ngFor="let query of listOfUnionQueries">{{ query }}</li>

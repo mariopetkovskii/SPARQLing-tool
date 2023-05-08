@@ -47,6 +47,8 @@ export class HomepageComponent {
   isNewUrl: boolean = false;
   listOfUnionQueries: any[] = [];
   unionQueriesFlag: boolean = false;
+  firstOntologyFlag: boolean = false;
+  saveInput: string = "";
 
   constructor(private apiService: ApiService,
               private dialog: MatDialog) {
@@ -67,6 +69,7 @@ export class HomepageComponent {
     this.checkedItemsForQuery.length = 0;
     this.unionQueryColumnClicked = "";
     this.isNewUrl = false;
+    this.getOntology(this.saveInput)
   }
 
   executeSparql(input: string) {
@@ -108,7 +111,6 @@ export class HomepageComponent {
 
   onChangeDistinct(event: any) {
     this.distinctChecked = event.target.checked;
-    console.log(this.distinctChecked)
   }
 
   isUrl(value: string): boolean {
@@ -188,8 +190,7 @@ export class HomepageComponent {
     }
   }
 
-  generateUnionSparql(limitValue: string){
-    const num = Number(limitValue);
+  generateUnionSparql(){
     const payload = {
       queries: this.listOfUnionQueries
     }
@@ -255,14 +256,16 @@ export class HomepageComponent {
   }
 
   getOntology(input: string) {
+    this.saveInput = input;
     input = input.replace(/\s/g, '_');
     input = input.toLowerCase().replace(/(^|\s)\S/g, (letter: string) => letter.toUpperCase());
-    console.log(input)
     this.loading = true;
     this.apiService.getOntology(input).subscribe((data: any) => {
       this.property = data.property;
       this.isPropertyOf = data.isPropertyOf;
       this.showProperty = true;
+      this.showIsPropertyOf = false;
+      this.firstOntologyFlag = true;
       this.loading = false;
       this.dataResource = input;
       this.showTabChoose = true;
@@ -270,7 +273,6 @@ export class HomepageComponent {
   }
 
   getOntologyWithPage(input: string, columnName: string) {
-    console.log(columnName)
     this.loading = true;
     this.isNewUrl = true;
     this.apiService.getOntologyWithPage(input).subscribe((data: any) => {
