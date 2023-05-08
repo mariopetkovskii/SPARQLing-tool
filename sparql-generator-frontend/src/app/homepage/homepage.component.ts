@@ -102,8 +102,6 @@ export class HomepageComponent {
   }
 
   logColumnName(columnName: string) {
-    console.log(columnName);
-    console.log(this.formattedResults[0][columnName])
     this.clickedColumn = this.formattedResults[0][columnName]
     this.columnName = columnName
     this.openDialog()
@@ -333,7 +331,6 @@ export class HomepageComponent {
     const languageFilterString = "filter(langMatches(lang(?" + this.columnName + "),\"";
     if (this.isLanguageFilterPresent(this.generatedQuery, this.columnName)) {
       const startIndex = this.generatedQuery.indexOf(languageFilterString) + languageFilterString.length;
-      console.log(startIndex)
       const endIndex = this.generatedQuery.indexOf("\")", startIndex);
       const currentLanguage = this.generatedQuery.slice(startIndex, endIndex);
       this.generatedQuery = this.generatedQuery.replace(currentLanguage, language);
@@ -347,7 +344,6 @@ export class HomepageComponent {
     const stringConstraintFilterString = "FILTER regex(str(?" + this.columnName + "), \"" + stringConstraint + "\")";
     if (this.isStringConstraintPresent(this.generatedQuery, this.columnName)) {
       const startIndex = this.generatedQuery.indexOf(stringConstraintFilterString) + stringConstraintFilterString.length + 1;
-      console.log(startIndex)
       const endIndex = this.generatedQuery.indexOf("\")", startIndex);
       const currentConstraint = this.generatedQuery.slice(startIndex, endIndex);
       this.generatedQuery = this.generatedQuery.replace(currentConstraint, stringConstraint);
@@ -361,7 +357,6 @@ export class HomepageComponent {
     const typeOfDateSort = "}ORDER BY "  + this.dateTypeOfSort + "(?" + this.columnName + ")";
     if (this.isDateSortFilterPresent(this.generatedQuery, this.columnName)) {
         this.generatedQuery = this.generatedQuery.replace("ORDER BY " + this.lastDateTypeOfSort, "ORDER BY " + sortByDateType);
-        console.log(this.lastDateTypeOfSort)
         this.lastDateTypeOfSort = sortByDateType;
     } else {
       this.lastDateTypeOfSort = sortByDateType;
@@ -423,7 +418,6 @@ export class HomepageComponent {
         this.language = result.language;
         this.stringConstraint = result.stringContains;
         this.dateTypeOfSort = result.dateTypeOfSort;
-        console.log(this.dateTypeOfSort)
         if(result.type === "language"){
           this.changeQueryToFilterByLang(this.language);
         }
