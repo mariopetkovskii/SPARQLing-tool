@@ -10,12 +10,16 @@ import { DialogConstraintsComponent } from './dialog-constraints/dialog-constrai
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatTableModule} from "@angular/material/table";
 import {MatTabsModule} from "@angular/material/tabs";
+import { GenerateDialogComponentComponent } from './generate-dialog-component/generate-dialog-component.component';
+import { DialogGenerateComponentComponent } from './dialog-generate-component/dialog-generate-component.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     HomepageComponent,
-    DialogConstraintsComponent
+    DialogConstraintsComponent,
+    GenerateDialogComponentComponent,
+    DialogGenerateComponentComponent
   ],
   imports: [
     BrowserModule,

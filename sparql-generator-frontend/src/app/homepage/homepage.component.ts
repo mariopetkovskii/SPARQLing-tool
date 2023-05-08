@@ -5,6 +5,7 @@ import {DialogPosition, MatDialog, MatDialogConfig} from '@angular/material/dial
 import {DialogConstraintsComponent} from "../dialog-constraints/dialog-constraints.component";
 import {map} from 'rxjs/operators';
 import {MatTabChangeEvent} from "@angular/material/tabs";
+import {DialogGenerateComponentComponent} from "../dialog-generate-component/dialog-generate-component.component";
 
 interface Result {
   [key: string]: any;
@@ -41,9 +42,31 @@ export class HomepageComponent {
   dateTypeOfSort: string = "";
   lastDateTypeOfSort: string = "";
   map: Map<string, string> = new Map<string, string>();
+  variableName: string = "";
+  unionQueryColumnClicked: string = "";
+  isNewUrl: boolean = false;
+  listOfUnionQueries: any[] = [];
+  unionQueriesFlag: boolean = false;
 
   constructor(private apiService: ApiService,
               private dialog: MatDialog) {
+  }
+
+  unionQueryFlagChange(){
+    this.unionQueriesFlag = !this.unionQueriesFlag;
+  }
+
+  saveUnionQuery(){
+    this.listOfUnionQueries.push(this.generatedQuery)
+    this.generatedQuery = "";
+    this.dataResource = "";
+    this.checkedItems.length = 0;
+    this.sparqlQueryLoading = true;
+    this.sparqlQueryLoading = false;
+    localStorage.removeItem("query");
+    this.checkedItemsForQuery.length = 0;
+    this.unionQueryColumnClicked = "";
+    this.isNewUrl = false;
   }
 
   executeSparql(input: string) {
@@ -70,6 +93,7 @@ export class HomepageComponent {
       .subscribe(
         () => {
           this.checkedItemsForQuery.length = 0;
+          this.isNewUrl = false;
         }
       );
   }
@@ -164,7 +188,21 @@ export class HomepageComponent {
     }
   }
 
-  generateSparql(limitValue: string) {
+  generateUnionSparql(limitValue: string){
+    const num = Number(limitValue);
+    const payload = {
+      queries: this.listOfUnionQueries
+    }
+    this.apiService.generateUnionQuery(payload).subscribe((data: any) => {
+      this.generatedQuery = data.query;
+      this.sparqlQueryLoading = false;
+      localStorage.setItem("query", this.generatedQuery);
+      this.checkedItems.length = 0;
+      this.checkedItemsForQuery.length = 0;
+    });
+  }
+
+  generateSparql(limitValue: string, variableValue: string) {
     const num = Number(limitValue);
     let propertyType;
     if (this.showProperty)
@@ -176,7 +214,8 @@ export class HomepageComponent {
       props: this.checkedItems,
       propertyType: propertyType,
       limit: num,
-      selectDistinct: this.distinctChecked
+      selectDistinct: this.distinctChecked,
+      variableName: variableValue
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateSparql(payload).subscribe((data: any) => {
@@ -188,7 +227,7 @@ export class HomepageComponent {
     });
   }
 
-  generateDynamicSparql(limitValue: string) {
+  generateDynamicSparql(limitValue: string, variableValue: string) {
     const num = Number(limitValue);
     let propertyType;
     if (this.showProperty)
@@ -201,7 +240,10 @@ export class HomepageComponent {
       props: this.checkedItemsForQuery,
       propertyType: propertyType,
       limit: num,
-      selectDistinct: this.distinctChecked
+      selectDistinct: this.distinctChecked,
+      variableName: variableValue,
+      columnClicked: this.unionQueryColumnClicked,
+      isNewUrl: this.isNewUrl
     }
     this.sparqlQueryLoading = true;
     this.apiService.generateDynamicSparql(payload).subscribe((data: any) => {
@@ -230,6 +272,7 @@ export class HomepageComponent {
   getOntologyWithPage(input: string, columnName: string) {
     console.log(columnName)
     this.loading = true;
+    this.isNewUrl = true;
     this.apiService.getOntologyWithPage(input).subscribe((data: any) => {
       localStorage.setItem("query", this.generatedQuery)
       this.property = data.property;
@@ -241,6 +284,7 @@ export class HomepageComponent {
       this.checkedItems.length = 0;
       // @ts-ignore
       this.map.set("<" + input + ">", "?" + columnName)
+      this.unionQueryColumnClicked = columnName
     });
   }
 

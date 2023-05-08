@@ -7,10 +7,10 @@ import org.apache.jena.rdf.model.*;
 import org.apache.jena.vocabulary.RDFS;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HelperFunctions {
     public static String capitalizeEveryWord(String sentence){
@@ -44,19 +44,47 @@ public class HelperFunctions {
             List<Map<String, String>> props,
             String propertyType,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName){
         if(propertyType.equals("property")){
-            return generateSparqlWithProperty(dataResource, props, maxLimit, selectDistinct);
+            return generateSparqlWithProperty(dataResource, props, maxLimit, selectDistinct, variableName);
         }else{
-            return generateSparqlWithIsPropertyOf(dataResource, props, maxLimit, selectDistinct);
+            return generateSparqlWithIsPropertyOf(dataResource, props, maxLimit, selectDistinct, variableName);
         }
+    }
+
+    public static ResponseEntity<Map<String, String>> generateUnionQuery(List<String> queries){
+        StringBuilder queryBuilder = new StringBuilder();
+        StringBuilder queryInside = new StringBuilder();
+        Set<String> ontologies = new HashSet<>();
+        for (String query : queries) {
+            int selectIndexBeforeSelect = query.indexOf("SELECT");
+            String prefixes = query.substring(0, selectIndexBeforeSelect);
+            String [] prefixesParts = prefixes.split("\n");
+            ontologies.addAll(Arrays.asList(prefixesParts));
+            int openingBraceIndex = query.indexOf("{");
+            int closingBraceIndex = query.indexOf("}");
+            String part = query.substring(openingBraceIndex, closingBraceIndex + 1);
+            queryInside.append(part + " union ");
+            System.out.println(part);
+        }
+        ontologies.forEach(queryBuilder::append);
+        queryBuilder.append("SELECT * WHERE {");
+        queryBuilder.append(queryInside.substring(0, queryInside.length() - 7));
+        queryBuilder.append("}");
+        System.out.println(queryBuilder);
+        String queryToBeReturned = queryBuilder.toString();
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("query", queryToBeReturned);
+        return ResponseEntity.ok(responseMap);
     }
 
     public static ResponseEntity<Map<String, String>> generateSparqlWithProperty(
             String dataResource,
             List<Map<String, String>> props,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName){
         StringBuilder queryBuilder = new StringBuilder();
         String querySelector;
         if(selectDistinct) {
@@ -75,7 +103,7 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            query.append(ontology).append(" ?").append(property).append(dataResource.replace("_", "")).append(";").append("\n");
+            query.append(ontology).append(" ?").append(property).append(variableName).append(";").append("\n");
         }
         query = new StringBuilder(query.substring(0, query.length() - 2));
         queryBuilder.append(query);
@@ -95,7 +123,8 @@ public class HelperFunctions {
             String dataResource,
             List<Map<String, String>> props,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName){
         StringBuilder queryBuilder = new StringBuilder();
         String querySelector;
         if(selectDistinct) {
@@ -113,7 +142,7 @@ public class HelperFunctions {
             String prefix = ontology.split(":")[0];
             if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
                 prefixes.append(getPrefix(prefix)).append("\n");
-            query.append("?").append(dataResource.replace("_", "")).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
+            query.append("?").append(variableName).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
         }
         query = new StringBuilder(query.substring(0, query.length() - 2));
         queryBuilder.append(query);
@@ -133,7 +162,8 @@ public class HelperFunctions {
 //            String dataResource,
 //            List<Map<String, String>> props,
 //            Integer maxLimit,
-//            Boolean selectDistinct){
+//            Boolean selectDistinct,
+//            String variableName){
 //        StringBuilder queryBuilder = new StringBuilder();
 //        String querySelector;
 //        if(selectDistinct) {
@@ -151,7 +181,7 @@ public class HelperFunctions {
 //            String prefix = ontology.split(":")[0];
 //            if(!prefixes.toString().contains(HelperFunctions.getPrefix(prefix)))
 //                prefixes.append(getPrefix(prefix)).append("\n");
-//            query.append("?").append(dataResource.replace("_", "")).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
+//            query.append("?").append(variableName).append(property).append(" ").append(ontology).append(" <http://dbpedia.org/resource/").append(dataResource).append(">.").append("\n");
 //            query.append("} union {");
 //        }
 //        query = new StringBuilder(query.substring(0, query.length() - 10));
@@ -207,11 +237,14 @@ public class HelperFunctions {
             List<Map<String, String>> props,
             String typeOfProperty,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName,
+            String unionQueryColumnClicked,
+            Boolean isNewUrl){
         if(typeOfProperty.equals("property")){
-            return generateDynamicSparqlWithProperty(sparqlQuery, dataResource, props, maxLimit, selectDistinct);
+            return generateDynamicSparqlWithProperty(sparqlQuery, dataResource, props, maxLimit, selectDistinct, variableName, unionQueryColumnClicked, isNewUrl);
         }else{
-            return generateDynamicSparqlWithIsPropertyOf(sparqlQuery, dataResource, props, maxLimit, selectDistinct);
+            return generateDynamicSparqlWithIsPropertyOf(sparqlQuery, dataResource, props, maxLimit, selectDistinct, variableName);
         }
     }
 
@@ -220,7 +253,10 @@ public class HelperFunctions {
             String dataResource,
             List<Map<String, String>> props,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName,
+            String unionQueryColumnClicked,
+            Boolean isNewUrl){
         String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
         if(selectDistinct) {
             query = query.replace("SELECT *", "SELECT DISTINCT *");
@@ -229,6 +265,10 @@ public class HelperFunctions {
         }
         StringBuilder prefixes = new StringBuilder();
         StringBuilder newQuery = new StringBuilder();
+        String [] parts = new String[0];
+        Boolean isNewPartAlreadyExist = false;
+        String newPart = "";
+        List<String> newParts = new ArrayList<>();
         for (Map<String, String> prop : props) {
             String property = prop.get("property");
             String ontology = prop.get("ontology");
@@ -239,10 +279,58 @@ public class HelperFunctions {
                     prefixes.delete(0, prefixes.length());
                 }
             }
-            newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").
-                    append(property).
-                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@'\"]", "")).
-                    append(".");
+            if(query.contains(" union ")){
+                String regex = "\\{(.*?)\\}";
+
+                Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+                Matcher matcher = pattern.matcher(query);
+
+                StringBuilder extractedBlock = new StringBuilder();
+
+                while (matcher.find()) {
+                    extractedBlock.append(matcher.group(1)).append("\n");
+                }
+
+                String extractedQuery = extractedBlock.toString().trim();
+
+                if (!extractedQuery.isEmpty()) {
+                    parts = extractedQuery.split("\n");
+                    parts[0] = parts[0].substring(1);
+                    for (String part: parts
+                         ) {
+//                        part = part.replace(" ", "");
+                        String getFirstPart = part.split(" ")[0];
+                        String [] partialQueryParts = part.split(" ");
+
+                        if(partialQueryParts.length > 3){
+                            if(!isNewPartAlreadyExist) {
+                                newPart = part.concat(partialQueryParts[partialQueryParts.length - 1].
+                                        substring(0, partialQueryParts[partialQueryParts.length - 1].length() - 1)
+                                        + " " + ontology + " ?" + property + variableName + ".");
+                                isNewPartAlreadyExist = true;
+                            }
+                        }else{
+                            newPart = part.concat(getFirstPart + " " + ontology + " ?" + property + variableName + ".");
+                        }
+                        if(getFirstPart.equals("")){
+                            continue;
+                        }
+                        newParts.add(newPart);
+                    }
+
+                }
+            }else {
+                newQuery.append("<").append(dataResource).append(">").append(" ").append(ontology).append(" ?").
+                        append(property).
+                        append(variableName).
+                        append(".");
+            }
+        }
+        List<String> partsThatWillBeReplaced = new ArrayList<>(Arrays.asList(parts));
+        partsThatWillBeReplaced.removeIf(e -> e == null || e.trim().isEmpty());
+        newParts.removeIf(e -> e == null || e.trim().isEmpty());
+        for(int i = 0; i < partsThatWillBeReplaced.size(); i++){
+            query = query.replace(partsThatWillBeReplaced.get(i), newParts.get(i));
         }
         newQuery.append("}");
         String newQueryString = newQuery.toString();
@@ -265,7 +353,8 @@ public class HelperFunctions {
             String dataResource,
             List<Map<String, String>> props,
             Integer maxLimit,
-            Boolean selectDistinct){
+            Boolean selectDistinct,
+            String variableName){
         String query = sparqlQuery.substring(0, sparqlQuery.length()-1);
         if(selectDistinct) {
             query = query.replace("SELECT *", "SELECT DISTINCT *");
@@ -285,7 +374,7 @@ public class HelperFunctions {
                 }
             }
             newQuery.append("?").
-                    append(dataResource.replace("http://dbpedia.org/resource/", "").replaceAll("[(){}_,.!#@'\"]", "")).
+                    append(variableName).
                     append(property).append(" ").append(ontology).append(" <").append(dataResource).append(">.").append("\n");
         }
         newQuery.append("}");
@@ -322,27 +411,40 @@ public class HelperFunctions {
         return false;
     }
 
-    public static List<Map<String, String>> executeQuery(String queryString){
+    public static List<Map<String, String>> executeQuery(String queryString) {
 
         List<Map<String, String>> resultList = new ArrayList<>();
 
         Query query = QueryFactory.create(queryString);
         String SPARQLEndpoint = "https://dbpedia.org/sparql";
 
-        try(QueryExecution execution = QueryExecutionFactory.sparqlService(SPARQLEndpoint, query)){
+        try (QueryExecution execution = QueryExecutionFactory.sparqlService(SPARQLEndpoint, query)) {
             ResultSet resultSet = execution.execSelect();
             while (resultSet.hasNext()) {
                 Map<String, String> resultMap = new HashMap<>();
                 QuerySolution solution = resultSet.nextSolution();
-                solution.varNames().forEachRemaining(varName -> {
-                    String value = solution.get(varName).toString();
+
+                // Get the variable names
+                Iterator<String> varNames = solution.varNames();
+                while (varNames.hasNext()) {
+                    String varName = varNames.next();
+                    String value = solution.contains(varName) ? solution.get(varName).toString() : "";
                     resultMap.put(varName, value);
-                });
+                }
+
+                // Add missing variables with empty values
+                for (String varName : query.getResultVars()) {
+                    if (!resultMap.containsKey(varName)) {
+                        resultMap.put(varName, "");
+                    }
+                }
+
                 resultList.add(resultMap);
             }
         }
 
         return resultList;
     }
+
 
 }

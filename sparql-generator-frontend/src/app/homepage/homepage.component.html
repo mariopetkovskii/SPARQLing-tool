@@ -68,11 +68,16 @@
             <input type="checkbox" class="form-check-input" (change)="onChangeDistinct($event)"
                    [checked]="distinctChecked"><label class="form-check-label">Select Distinct</label>
           </div>
-          <button class="btn btn-secondary d-inline-block" (click)="generateSparql(limitInput.value)"
+          <label>Variable Name:</label>
+          <input type="text" class="form-control d-inline-block w-25 m-2" #variableInput required>
+          <button class="btn btn-secondary d-inline-block" (click)="generateSparql(limitInput.value, variableInput.value)"
                   *ngIf="!generatedQuery">Generate
           </button>
-          <button class="btn btn-secondary d-inline-block" (click)="generateDynamicSparql(limitInput.value)"
-                  *ngIf="generatedQuery">Generate
+          <button class="btn btn-secondary d-inline-block" (click)="generateDynamicSparql(limitInput.value, variableInput.value)"
+                  *ngIf="generatedQuery && !unionQueriesFlag">Generate
+          </button>
+          <button class="btn btn-secondary d-inline-block" (click)="generateUnionSparql(limitInput.value)"
+                  *ngIf="unionQueriesFlag">Generate
           </button>
         </div>
       </div>
@@ -86,14 +91,21 @@
         </div>
       </div>
       <div *ngIf="!sparqlQueryLoading">
-        <div *ngIf="generatedQuery" class="mt-4">
+        <div class="mt-4">
           <label for="queryResult">SPARQL Query:</label>
-          <textarea class="form-control" id="queryResult" rows="5" #inputQuery>{{generatedQuery}}</textarea>
+          <textarea class="form-control" id="queryResult" rows="15" #inputQuery>{{generatedQuery}}</textarea>
           <button class="btn btn-secondary m-2" (click)="executeSparql(inputQuery.value)">Execute Sparql</button>
           <button class="btn btn-secondary m-2" (click)="executeSparqlWithClearResponse()">Execute Sparql With Clear
             Response
           </button>
           <button class="btn btn-secondary m-2" (click)="swapUrlWithItsVariable()">Url-Variable</button>
+          <button class="btn btn-secondary m-2" (click)="saveUnionQuery()" *ngIf="unionQueriesFlag">Save Query</button>
+          <input type="checkbox" (change)="unionQueryFlagChange()">
+          <div *ngIf="unionQueriesFlag">
+            <ul>
+            <li *ngFor="let query of listOfUnionQueries">{{ query }}</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>

@@ -28,6 +28,10 @@ export class ApiService {
     return this.httpClient.post('http://localhost:8080/generateSparqlWithLabels', json)
   }
 
+  generateUnionQuery(json: any){
+    return this.httpClient.post('http://localhost:8080/generateUnionQueriesSparql', json)
+  }
+
   executeSparql(json: any){
     return this.httpClient.post('http://localhost:8080/executeSparql', json)
   }

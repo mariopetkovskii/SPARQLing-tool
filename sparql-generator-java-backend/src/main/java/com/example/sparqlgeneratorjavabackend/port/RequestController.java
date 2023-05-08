@@ -19,7 +19,8 @@ public class RequestController {
         dataResource = HelperFunctions.capitalizeEveryWord(dataResource);
         Integer maxLimit = (Integer) payload.get("limit");
         Boolean selectDistinct = (Boolean) payload.get("selectDistinct");
-        return HelperFunctions.generateSparql(dataResource, props, typeOfProperty, maxLimit, selectDistinct);
+        String variableName = (String) payload.get("variableName");
+        return HelperFunctions.generateSparql(dataResource, props, typeOfProperty, maxLimit, selectDistinct, variableName);
     }
 
     @PostMapping("/generateSparqlWithLabels")
@@ -44,7 +45,16 @@ public class RequestController {
         String typeOfProperty = (String) payload.get("propertyType");
         Integer maxLimit = (Integer) payload.get("limit");
         Boolean selectDistinct = (Boolean) payload.get("selectDistinct");
-        return HelperFunctions.generateDynamicSparql(query, dataResource, props, typeOfProperty, maxLimit, selectDistinct);
+        String variableName = (String) payload.get("variableName");
+        String unionQueryColumnClicked = (String) payload.get("columnClicked");
+        Boolean isNewUrl = (Boolean) payload.get("isNewUrl");
+        return HelperFunctions.generateDynamicSparql(query, dataResource, props, typeOfProperty, maxLimit, selectDistinct, variableName, unionQueryColumnClicked, isNewUrl);
+    }
+
+    @PostMapping("/generateUnionQueriesSparql")
+    public ResponseEntity<Map<String, String>> generateUnionSparql(@RequestBody Map<String, Object> payload){
+        List<String> queries = (List<String>) payload.get("queries");
+        return HelperFunctions.generateUnionQuery(queries);
     }
 
 }

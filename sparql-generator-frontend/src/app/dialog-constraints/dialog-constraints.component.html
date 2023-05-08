@@ -20,7 +20,7 @@
     </button>
   </div>
 
-  <div *ngIf="filterType === 'date'">
+  <div *ngIf="filterType === 'date' || filterType === 'integer' || filterType === 'gMonthDay'">
     <label for="sorting-direction">Select sorting direction:</label>
     <select name="sorting-direction" id="sorting-direction" class="form-control" #dateSortInput>
       <option value="">Choose</option>
