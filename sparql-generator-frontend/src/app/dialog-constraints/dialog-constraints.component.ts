@@ -116,8 +116,11 @@ export class DialogConstraintsComponent implements OnInit{
       console.log(dataType)
 
       switch (dataType) {
+        case "integer":
+        case "double":
         case "dateTime":
         case "gMonthDay":
+        case "usDollar":
         case "date":
           this.filterType = dataType;
           break;
